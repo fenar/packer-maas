@@ -1,53 +1,53 @@
 {
-    "variables":
-        {
-            "centos8_iso_url": "https://mirrors.edge.kernel.org/centos/8.1.1911/isos/x86_64/CentOS-8.1.1911-x86_64-boot.iso",
-            "centos8_sha256sum_url": "https://mirrors.edge.kernel.org/centos/8.1.1911/isos/x86_64/CHECKSUM"
-        },
-    "builders": [
-        {
-            "type": "qemu",
-            "communicator": "none",
-            "iso_url": "{{user `centos8_iso_url`}}",
-            "iso_checksum_type": "sha256",
-            "iso_checksum_url": "{{user `centos8_sha256sum_url`}}",
-            "boot_command": [
-                "<tab> ",
-                "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos8.ks ",
-                "<enter>"
-            ],
-            "boot_wait": "3s",
-            "disk_size": "4G",
-            "headless": true,
-            "memory": 2048,
-            "http_directory": "http",
-            "shutdown_timeout": "20m"
-        }
-    ],
-    "post-processors": [
-        {
-            "type": "shell-local",
-            "inline_shebang": "/bin/bash -e",
-            "inline": [
-                "TMP_DIR=$(mktemp -d /tmp/packer-maas-XXXX)",
-                "echo 'Mounting image...'",
-                "modprobe nbd",
-                "qemu-nbd -d /dev/nbd4",
-                "qemu-nbd -c /dev/nbd4 -n output-qemu/packer-qemu",
-                "echo 'Waiting for partitions to be created...'",
-                "tries=0",
-                "while [ ! -e /dev/nbd4p1 -a $tries -lt 60 ]; do",
-                "    sleep 1",
-                "    tries=$((tries+1))",
-                "done",
-                "mount /dev/nbd4p1 $TMP_DIR",
-                "echo 'Tarring up image...'",
-                "tar -Sczpf centos8.tar.gz --selinux -C $TMP_DIR .",
-                "echo 'Unmounting image...'",
-                "umount $TMP_DIR",
-                "qemu-nbd -d /dev/nbd4",
-                "rmdir $TMP_DIR"
-            ]
-        }
-    ]
+  "builders": [
+    {
+      "boot_command": [
+        "<tab> ",
+        "inst.ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos8.ks ",
+        "<enter>"
+      ],
+      "boot_wait": "3s",
+      "communicator": "none",
+      "disk_size": "4G",
+      "headless": true,
+      "http_directory": "http",
+      "iso_checksum": "file:{{user `centos8_sha256sum_url`}}",
+      "iso_url": "{{user `centos8_iso_url`}}",
+      "memory": 2048,
+      "shutdown_timeout": "20m",
+      "type": "qemu"
+    }
+  ],
+  "post-processors": [
+    {
+      "inline": [
+        "TMP_DIR=$(mktemp -d /tmp/packer-maas-XXXX)",
+        "echo 'Mounting image...'",
+        "sudo modprobe nbd max_part=16",
+        "sudo qemu-nbd -d /dev/nbd4",
+        "sudo qemu-nbd -c /dev/nbd4 -n output-qemu/packer-qemu",
+        "sudo partprobe /dev/nbd4",
+        "echo 'Waiting for partitions to be created...'",
+        "tries=0",
+        "while [ ! -e /dev/nbd4p1 -a $tries -lt 60 ]; do",
+        "    sleep 1",
+        "    tries=$((tries+1))",
+        "done",
+        "sudo mount /dev/nbd4p1 $TMP_DIR",
+        "echo 'Tarring up image...'",
+        "sudo tar -Sczpf centos8.tar.gz --selinux -C $TMP_DIR .",
+        "echo 'Unmounting image...'",
+        "sudo umount $TMP_DIR",
+        "sudo qemu-nbd -d /dev/nbd4",
+        "sudo rmdir $TMP_DIR"
+      ],
+      "inline_shebang": "/bin/bash -e",
+      "type": "shell-local"
+    }
+  ],
+  "variables": {
+    "centos8_iso_url": "https://mirrors.edge.kernel.org/centos/8/isos/x86_64/CentOS-8.2.2004-x86_64-boot.iso",
+    "centos8_sha256sum_url": "https://mirrors.edge.kernel.org/centos/8/isos/x86_64/CHECKSUM"
+
+  }
 }
