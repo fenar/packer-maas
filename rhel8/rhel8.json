@@ -31,6 +31,7 @@
                 "modprobe nbd",
                 "qemu-nbd -d /dev/nbd4",
                 "qemu-nbd -c /dev/nbd4 -n output-qemu/packer-qemu",
+		"sudo partprobe /dev/nbd4",
                 "echo 'Waiting for partitions to be created...'",
                 "tries=0",
                 "while [ ! -e /dev/nbd4p1 -a $tries -lt 60 ]; do",
