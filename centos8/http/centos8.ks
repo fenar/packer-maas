@@ -49,6 +49,7 @@ python3-oauthlib
 rsync
 tar
 grub2-efi-x64
+grub2-efi-x64-modules
 efibootmgr
 shim-x64
 dosfstools
